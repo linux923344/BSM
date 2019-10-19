@@ -19,6 +19,7 @@
         tools:layout_editor_absoluteY="409dp" />
 
     <TextView
+        android:visibility="invisible"
         android:id="@+id/textView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

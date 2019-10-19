@@ -75,7 +75,7 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View view) {
-                response.setText(textPassword.getText());
+                /*response.setText(textPassword.getText());*/
 
                 File file = new File(filename);
 
@@ -101,7 +101,8 @@ public class MainActivity extends AppCompatActivity {
                                  Toast.LENGTH_SHORT);
                          toast.show();
                      }
-                     }  catch(IOException e){
+
+                 }  catch(IOException e){
                      e.printStackTrace();
                  }
             }
