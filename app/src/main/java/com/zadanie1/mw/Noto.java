@@ -72,7 +72,7 @@ public class Noto extends AppCompatActivity {
             fos = openFileOutput(FILE_NAME, MODE_PRIVATE);
             fos.write(text.getBytes());
 
-            ChangeNote.getText().clear();
+            /*ChangeNote.getText().clear();*/
             Toast.makeText(this, "Saved to " + getFilesDir() + "/" + FILE_NAME, Toast.LENGTH_LONG).show();
 
         } catch (FileNotFoundException e) {
