@@ -45,11 +45,24 @@ public class MainActivity extends AppCompatActivity {
         return content;
     }
 
+    private boolean isFileExists(File file) {
+        return file.exists() && !file.isDirectory();
+
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        final String filename =  getFilesDir() + "/passwd.txt";
+        File file = new File(filename);
+
+        if (!isFileExists(file)){
+            Intent myIntent3 = new Intent(MainActivity.this,
+                    FirstPassword.class);
+            startActivity(myIntent3);
+        }
 
         response = (TextView) findViewById(R.id.textView);
         button = (Button) findViewById(R.id.button);
@@ -68,11 +81,6 @@ public class MainActivity extends AppCompatActivity {
         button.setOnClickListener(new OnClickListener() {
             private final String filename =  getFilesDir() + "/passwd.txt";
 
-            private boolean isFileExists(File file) {
-                return file.exists() && !file.isDirectory();
-
-            }
-
             @Override
             public void onClick(View view) {
                 /*response.setText(textPassword.getText());*/
@@ -90,22 +98,24 @@ public class MainActivity extends AppCompatActivity {
                                      Noto.class);
                              startActivity(myIntent2);
 
-                         }
-                     }  else if (textPassword.getText().toString().equals("FirstPassword!")) {
-                         Intent myIntent2 = new Intent(MainActivity.this,
-                                 Noto.class);
-                         startActivity(myIntent2);
-                     }  else {
-                         Toast toast = Toast.makeText(getApplicationContext(),
-                                 "Password is NOT correct",
-                                 Toast.LENGTH_SHORT);
-                         toast.show();
+                         } else {
+                             Toast toast = Toast.makeText(getApplicationContext(),
+                                     "Password is NOT correct",
+                                     Toast.LENGTH_SHORT);
+                             toast.show();
+                            }
+                     } else {
+                         Intent myIntent3 = new Intent(MainActivity.this,
+                                 FirstPassword.class);
+                         startActivity(myIntent3);
                      }
 
                  }  catch(IOException e){
                      e.printStackTrace();
                  }
+                textPassword.getText().clear();
             }
         });
+
     }
 }
