@@ -1,6 +1,7 @@
 package com.zadanie1.mw;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.app.Activity;
 import android.view.View;
@@ -9,15 +10,21 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.RequiresApi;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 public class FormPassword extends Activity {
     private static final String FILE_NAME = "passwd.txt";
+    private static String input;
 
 
     public String readFile(String filename) throws IOException {
@@ -38,6 +45,56 @@ public class FormPassword extends Activity {
             }
         }
         return content;
+    }
+
+    public static String SHA512(String s)
+    {
+        MessageDigest digest;
+        String generatedPassword = null;
+        String salt = "cnsakn";
+        try
+        {
+            MessageDigest md = MessageDigest.getInstance("SHA-512");
+            md.update(salt.getBytes(StandardCharsets.UTF_8));
+
+            byte[] bytes = md.digest(s.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < bytes.length; i++) {
+                sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+            }
+            generatedPassword = sb.toString();
+
+        }
+        catch (NoSuchAlgorithmException e)
+        {
+            e.printStackTrace();
+        }
+        return generatedPassword;
+    }
+
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private String unSHA512(String passwordToHash)
+    {
+        String generatedPassword = null;
+        String salt = "cnsakn";
+        try
+        {
+            MessageDigest md = MessageDigest.getInstance("SHA-512");
+            md.update(salt.getBytes(StandardCharsets.UTF_8));
+            byte[] bytes = md.digest(passwordToHash.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for(int i=0; i< bytes.length ;i++)
+            {
+                sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+            }
+            generatedPassword = sb.toString();
+        }
+        catch (NoSuchAlgorithmException e)
+        {
+            e.printStackTrace();
+        }
+        return generatedPassword;
+
     }
 
     @Override
@@ -61,11 +118,17 @@ public class FormPassword extends Activity {
                 final String filename =  getFilesDir() + "/passwd.txt";
                 File file = new File(filename);
 
+                input = currentpassword.getText().toString();
+                String SHAinput = unSHA512(input);
+                currentpassword.setText("");
+                String password = null;
+
                 try {
-                    if (currentpassword.getText().toString().equals(readFile(filename).toString())) {
+                    password = readFile(filename).toString();
+                    if(SHAinput.equals(password)){
                         if (newpassword.getText().toString().equals(renewpassword.getText().toString())) {
 
-                            String text = newpassword.getText().toString();
+                            String text = SHA512(newpassword.getText().toString());
                             FileOutputStream fos = null;
 
                             Toast toast = Toast.makeText(getApplicationContext(),
@@ -106,6 +169,7 @@ public class FormPassword extends Activity {
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
+
                 currentpassword.getText().clear();
                 newpassword.getText().clear();
                 renewpassword.getText().clear();

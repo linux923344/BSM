@@ -1,10 +1,12 @@
 package com.zadanie1.mw;
+import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
-
-import android.Manifest;
+import androidx.biometric.BiometricPrompt;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.Handler;
 import android.view.View;
 import android.widget.Button;
 import android.view.View.OnClickListener;
@@ -15,6 +17,10 @@ import android.widget.Toast;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.concurrent.Executor;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -24,6 +30,7 @@ public class MainActivity extends AppCompatActivity {
     private EditText textPassword;
     private View viewPassword;
     private static final String filename = "passwd.txt";
+    private static String input;
 
     public String readFile(String filename) throws IOException {
         String content = null;
@@ -50,6 +57,42 @@ public class MainActivity extends AppCompatActivity {
 
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.KITKAT)
+    private String unSHA512(String passwordToHash)
+    {
+        String generatedPassword = null;
+        String salt = "cnsakn";
+        try
+        {
+            MessageDigest md = MessageDigest.getInstance("SHA-512");
+            md.update(salt.getBytes(StandardCharsets.UTF_8));
+            byte[] bytes = md.digest(passwordToHash.getBytes(StandardCharsets.UTF_8));
+            StringBuilder sb = new StringBuilder();
+            for(int i=0; i< bytes.length ;i++)
+            {
+                sb.append(Integer.toString((bytes[i] & 0xff) + 0x100, 16).substring(1));
+            }
+            generatedPassword = sb.toString();
+        }
+        catch (NoSuchAlgorithmException e)
+        {
+            e.printStackTrace();
+        }
+        return generatedPassword;
+
+    }
+
+
+    private Handler handler = new Handler();
+
+    private Executor executor = new Executor() {
+        @Override
+        public void execute(Runnable command) {
+            handler.post(command);
+        }
+    };
+
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -63,12 +106,14 @@ public class MainActivity extends AppCompatActivity {
                     FirstPassword.class);
             startActivity(myIntent3);
         }
+        else { showBiometricPrompt();
+        }
+
 
         response = (TextView) findViewById(R.id.textView);
         button = (Button) findViewById(R.id.button);
         restartpassword = (Button) findViewById(R.id.restartpassword);
         textPassword = findViewById(R.id.editText);
-
 
         restartpassword.setOnClickListener(new OnClickListener() {
             public void onClick(View arg0) {
@@ -83,39 +128,99 @@ public class MainActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View view) {
-                /*response.setText(textPassword.getText());*/
-
                 File file = new File(filename);
 
-                 try {
-                     if (isFileExists(file)) {
-                         if (textPassword.getText().toString().equals(readFile(filename).toString())) {
-                             Toast toast = Toast.makeText(getApplicationContext(),
-                                     "Password is correct!",
-                                     Toast.LENGTH_SHORT);
-                             toast.show();
-                             Intent myIntent2 = new Intent(MainActivity.this,
-                                     Noto.class);
-                             startActivity(myIntent2);
+                try {
+                    input = textPassword.getText().toString();
+                    String SHAinput = unSHA512(input);
+                    textPassword.setText("");
+                    String password = readFile(filename).toString();
 
-                         } else {
-                             Toast toast = Toast.makeText(getApplicationContext(),
-                                     "Password is NOT correct",
-                                     Toast.LENGTH_SHORT);
-                             toast.show();
-                            }
-                     } else {
-                         Intent myIntent3 = new Intent(MainActivity.this,
-                                 FirstPassword.class);
-                         startActivity(myIntent3);
-                     }
+                    if (isFileExists(file)) {
 
-                 }  catch(IOException e){
-                     e.printStackTrace();
-                 }
+                        if(SHAinput.equals(password)){
+                            Toast toast = Toast.makeText(getApplicationContext(),
+                                    "Password is correct!",
+                                    Toast.LENGTH_SHORT);
+                            toast.show();
+                            Intent myIntent2 = new Intent(MainActivity.this,
+                                    Noto.class);
+                            startActivity(myIntent2);
+
+                        } else {
+                            Toast toast = Toast.makeText(getApplicationContext(),
+                                    "Password is NOT correct",
+                                    Toast.LENGTH_SHORT);
+                            toast.show();
+                        }
+                    } else {
+                        Intent myIntent3 = new Intent(MainActivity.this,
+                                FirstPassword.class);
+                        startActivity(myIntent3);
+                    }
+
+                }  catch(IOException e){
+                    e.printStackTrace();
+                }
                 textPassword.getText().clear();
             }
         });
 
     }
+    public static String getInput() {
+        return input;
+    }
+
+
+    private void showBiometricPrompt() {
+        BiometricPrompt.PromptInfo promptInfo =
+                new BiometricPrompt.PromptInfo.Builder()
+                .setTitle("Biometric login for my app")
+                .setSubtitle("Log in using your biometric credential")
+                .setNegativeButtonText("Cancel")
+                .build();
+
+        BiometricPrompt biometricPrompt = new BiometricPrompt(MainActivity.this,
+                executor, new BiometricPrompt.AuthenticationCallback() {
+            @Override
+            public void onAuthenticationError(int errorCode,
+                                              @NonNull CharSequence errString) {
+                super.onAuthenticationError(errorCode, errString);
+                Toast.makeText(getApplicationContext(),
+                        "Authentication error: " + errString, Toast.LENGTH_SHORT)
+                        .show();
+            }
+
+            @Override
+            public void onAuthenticationSucceeded(
+                    @NonNull BiometricPrompt.AuthenticationResult result) {
+                super.onAuthenticationSucceeded(result);
+                BiometricPrompt.CryptoObject authenticatedCryptoObject =
+                        result.getCryptoObject();
+                // User has verified the signature, cipher, or message
+                // authentication code (MAC) associated with the crypto object,
+                // so you can use it in your app's crypto-driven workflows.
+            }
+
+            @Override
+            public void onAuthenticationFailed() {
+                super.onAuthenticationFailed();
+                Toast.makeText(getApplicationContext(), "Authentication failed",
+                        Toast.LENGTH_SHORT)
+                        .show();
+                try {
+                    Thread.sleep(1000);
+                    System.exit(1);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+
+            }
+        });
+
+        // Displays the "log in" prompt.
+        biometricPrompt.authenticate(promptInfo);
+    }
+
+
 }
