@@ -61,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
     private String unSHA512(String passwordToHash)
     {
         String generatedPassword = null;
-        String salt = "cnsakn";
+        String salt = "Z7F4nGZEYa2AZQ3TVTrgYXJkezWPzDuGh54zVrjWtkGQLQNPFN5edJWvzh5rVgXbY5fv489JHourDWHMTKEumk24e6MzmwC8rCTPCHgKvWCnCjPG4HN3mLuWjWG3yabF";
         try
         {
             MessageDigest md = MessageDigest.getInstance("SHA-512");
@@ -167,6 +167,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
     }
+
     public static String getInput() {
         return input;
     }
@@ -175,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
     private void showBiometricPrompt() {
         BiometricPrompt.PromptInfo promptInfo =
                 new BiometricPrompt.PromptInfo.Builder()
-                .setTitle("Biometric login for my app")
+                .setTitle("Biometric login for Encrypted Noto")
                 .setSubtitle("Log in using your biometric credential")
                 .setNegativeButtonText("Cancel")
                 .build();

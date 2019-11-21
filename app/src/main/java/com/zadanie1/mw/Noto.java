@@ -6,25 +6,22 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
-import java.io.BufferedReader;
-import java.io.DataInputStream;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.CipherOutputStream;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
-import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
@@ -32,15 +29,31 @@ public class Noto extends AppCompatActivity {
     EditText ChangeNote;
     Button SaveNote;
     private static final String FILE_NAME = "notes.txt";
-
-    static String text;
-    private EditText textInputNotes;
-    private static String keyMultiply;
+    private static String keyStreach;
     private static String key;
     private static String initVector;
     protected static String password;
-    protected static String soil= "yWaDPPsFMXxXwEJsTcf42";
-    int pom=0;
+
+    public String keyStreaching(String pass) throws NoSuchAlgorithmException {
+        String salt = "NkAeUcRvdBwnrLVC4kbSwzTCeLBzZjxA2puRCvq47i5Le3Qanmxv2C2Q3REn77YHGpCqt8yjgFiiyV8HHRPSaLzzZBC8WHVwas8RTiau79wKnk5Q4zkp2EVq5jNwh3bd";
+
+        MessageDigest md = MessageDigest.getInstance("SHA-256");
+
+        byte[] byteData;
+        StringBuilder sb = new StringBuilder(64);
+        for (int a = 0; a < 100000; a++) {
+            md.update((pass + salt).getBytes());
+            byteData = md.digest();
+            for (int i = 0; i < byteData.length; i++) {
+                sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+            }
+            key = sb.toString();
+            sb.delete(0, sb.length());
+        }
+
+        return key;
+    }
+
 
 
     @Override
@@ -51,7 +64,7 @@ public class Noto extends AppCompatActivity {
         ChangeNote = (EditText) findViewById(R.id.changeNote);
         SaveNote = (Button) findViewById(R.id.SaveNote);
         FileInputStream fis = null;
-        password = MainActivity.getInput();
+        password = ((password = MainActivity.getInput()) != null) ? password : FormPassword.getInput();
 
         try {
             FileInputStream fileInputStream = null;
@@ -62,9 +75,9 @@ public class Noto extends AppCompatActivity {
 
             ChangeNote.setText(ciphertext.toString());
 
-            keyMultiply = password + soil + password + soil + soil + password + soil;
-            key = keyMultiply.substring(4, 20);
-            initVector = keyMultiply.substring(7, 23);
+            keyStreach = keyStreaching(password);
+            key = keyStreach.substring(4, 20);
+            initVector = keyStreach.substring(7, 23);
 
             byte[] bytesKey = key.getBytes("UTF-8");
             byte[] bytesIV = initVector.getBytes("UTF-8");
@@ -100,24 +113,26 @@ public class Noto extends AppCompatActivity {
     public void save (View v) throws IOException {
 
         try {
-        String text = ChangeNote.getText().toString();
-        FileOutputStream fos = null;
 
-        keyMultiply = password + soil + password + soil + soil + password + soil;
-        key = keyMultiply.substring(4, 20);
-        initVector = keyMultiply.substring(7, 23);
-        IvParameterSpec iv = new IvParameterSpec(initVector.getBytes("UTF-8"));
-        SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
+            String text = ChangeNote.getText().toString();
+            FileOutputStream fos = null;
+            password = ((password =  FormPassword.getInputNew()) != null) ? password : MainActivity.getInput();
+            keyStreach = keyStreaching(password);
+            key = keyStreach.substring(4, 20);
+            initVector = keyStreach.substring(7, 23);
 
-        Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
-        cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
+            IvParameterSpec iv = new IvParameterSpec(initVector.getBytes("UTF-8"));
+            SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes("UTF-8"), "AES");
 
-        byte[] encrypted = cipher.doFinal(text.getBytes());
+            Cipher cipher = Cipher.getInstance("AES/CBC/PKCS7Padding");
+            cipher.init(Cipher.ENCRYPT_MODE, skeySpec, iv);
 
-        fos = openFileOutput(FILE_NAME, MODE_PRIVATE);
-        fos.write(encrypted);
+            byte[] encrypted = cipher.doFinal(text.getBytes());
 
-        Toast.makeText(this, "Saved to " + getFilesDir() + "/" + FILE_NAME, Toast.LENGTH_LONG).show();
+            fos = openFileOutput(FILE_NAME, MODE_PRIVATE);
+            fos.write(encrypted);
+
+            Toast.makeText(this, "Saved to " + getFilesDir() + "/" + FILE_NAME, Toast.LENGTH_LONG).show();
 
         } catch (FileNotFoundException e) {
             e.printStackTrace();

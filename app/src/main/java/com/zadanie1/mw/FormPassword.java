@@ -25,7 +25,7 @@ import java.security.NoSuchAlgorithmException;
 public class FormPassword extends Activity {
     private static final String FILE_NAME = "passwd.txt";
     private static String input;
-
+    private static String newpass;
 
     public String readFile(String filename) throws IOException {
         String content = null;
@@ -51,7 +51,7 @@ public class FormPassword extends Activity {
     {
         MessageDigest digest;
         String generatedPassword = null;
-        String salt = "cnsakn";
+        String salt = "Z7F4nGZEYa2AZQ3TVTrgYXJkezWPzDuGh54zVrjWtkGQLQNPFN5edJWvzh5rVgXbY5fv489JHourDWHMTKEumk24e6MzmwC8rCTPCHgKvWCnCjPG4HN3mLuWjWG3yabF";
         try
         {
             MessageDigest md = MessageDigest.getInstance("SHA-512");
@@ -76,7 +76,7 @@ public class FormPassword extends Activity {
     private String unSHA512(String passwordToHash)
     {
         String generatedPassword = null;
-        String salt = "cnsakn";
+        String salt = "Z7F4nGZEYa2AZQ3TVTrgYXJkezWPzDuGh54zVrjWtkGQLQNPFN5edJWvzh5rVgXbY5fv489JHourDWHMTKEumk24e6MzmwC8rCTPCHgKvWCnCjPG4HN3mLuWjWG3yabF";
         try
         {
             MessageDigest md = MessageDigest.getInstance("SHA-512");
@@ -113,12 +113,16 @@ public class FormPassword extends Activity {
         renewpassword = (EditText) findViewById(R.id.renewpassword);
         confirm = (Button) findViewById(R.id.button);
 
+
+
         confirm.setOnClickListener(new View.OnClickListener() {
+
             public void onClick(View arg0) {
                 final String filename =  getFilesDir() + "/passwd.txt";
                 File file = new File(filename);
 
                 input = currentpassword.getText().toString();
+                newpass = newpassword.getText().toString();
                 String SHAinput = unSHA512(input);
                 currentpassword.setText("");
                 String password = null;
@@ -136,6 +140,10 @@ public class FormPassword extends Activity {
                                     Toast.LENGTH_SHORT);
                             toast.show();
 
+
+                            Intent myIntent3 = new Intent(FormPassword.this,
+                                    Noto.class);
+                            startActivity(myIntent3);
                             try {
                                 fos = openFileOutput(FILE_NAME, MODE_PRIVATE);
                                 fos.write(text.getBytes());
@@ -175,5 +183,11 @@ public class FormPassword extends Activity {
                 renewpassword.getText().clear();
             }
         });
+    }
+    public static String getInput() {
+        return input;
+    }
+    public static String getInputNew() {
+        return newpass;
     }
 }

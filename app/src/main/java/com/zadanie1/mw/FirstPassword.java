@@ -26,7 +26,7 @@ public class FirstPassword extends Activity {
     {
         MessageDigest digest;
         String generatedPassword = null;
-        String salt = "cnsakn";
+        String salt = "Z7F4nGZEYa2AZQ3TVTrgYXJkezWPzDuGh54zVrjWtkGQLQNPFN5edJWvzh5rVgXbY5fv489JHourDWHMTKEumk24e6MzmwC8rCTPCHgKvWCnCjPG4HN3mLuWjWG3yabF";
         try
         {
             MessageDigest md = MessageDigest.getInstance("SHA-512");
